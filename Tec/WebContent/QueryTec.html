@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<!--设置浏览器的布局视口，只在移动端浏览器起作用-->
+	<meta name="viewport" content="width=width-device,initial-scale=1,user-scalable=no" />
+	<!--引入bootstrap的核心css-->
+	<link rel="stylesheet" href="js/bootstrap/css/bootstrap.css" />
+	<title>查询教师列表</title>
+	<!--判断如果是IE9以下，引入兼容h5标签的js文件，注意空格的位置-->		
+	<!--[if lt IE 9]>
+	
+	<script src="js/bootstrap/js/respond.min.js"></script>
+	<script src="js/bootstrap/js/html5shiv.min.js"></script>		
+	<![end if] -->
+</head>
+<body>	
+	<div class="container">
+		
+		<ol class="breadcrumb">
+			<li><a href="#">教师管理系统</a></li>
+			<li><a href="#">教师管理</a></li>			
+			<li>查询教师数据</li>
+		</ol>
+
+		<h2 class="page-header">教师数据列表</h2>
+
+		<table class="table table-bordered table-striped" id="dataTable">
+			<thead>
+				<tr>
+					<th>教师编号</th>
+					<th>教师姓名</th>
+					<th>课程</th>
+					<th>教师等级</th>
+					<th>操作</th>
+				</tr>
+			</thead>
+			<tbody>
+				<!--
+				<tr>
+					<td>1</td>
+					<td>程序员</td>
+					<td>5000</td>
+					<td>50000</td>
+					<td>
+						<a href="javascript:;" class="btn btn-primary btn-sm update-btn">修改</a>
+						<a href="javascript:;" class="btn btn-danger btn-sm del-btn" data-id="6">删除</a>
+					</td>
+				</tr>
+				-->
+			</tbody>
+		</table>
+
+		<div class="row">
+			<div class="col-sm-offset-8 col-sm-4">
+				<a href="AddTec.html" class="btn btn-success btn-block">增加新教师</a>
+			</div>
+		</div>
+	</div>
+	
+	<!--引入jquery-->
+	<script src="js/jquery.js"></script>
+	<!-- 引入全局公共js文件 -->
+	<script type="text/javascript" src="js/global.js"></script>
+	<!--引入bootstrap的js功能-->
+	<script src="js/bootstrap/js/bootstrap.js"></script>
+	<!-- 引入layer弹出层js功能 -->
+	<script type="text/javascript" src="js/layer/layer.js"></script>
+	<script type="text/javascript">
+		
+	$(document).ready(function() {
+
+		//分页变量
+		var recordCount;//总记录数 
+		var pageSize;//每页多少条
+		var pageCount;//共几页
+		var pageNum = 1;//当前页码
+
+		//初始化第一页
+		getData();
+
+		//分页查询函数
+		function getData() {
+
+			$.getJSON(baseUrl + '/QueryTecServlet',{pageNum:pageNum,pageSize:7},function(data) {
+
+				var list = data.list;//数据集合
+
+				var html = '';//html字符串
+
+				var dataTable = $('#dataTable tbody');	
+
+				//清空原始表格数据
+				dataTable.empty();
+
+				//遍历数据集合
+				$.each(list,function(index,item) {
+
+					html = '';
+					html += '<tr>';
+					html += '	<td>' + item.tecId + '</td>';
+					html += '	<td>' + item.tecName + '</td>';
+					html += '	<td>' + item.course.courseName + '</td>';
+					html += '	<td>' + item.rank.rankName + '</td>';
+					html += '	<td>';						
+					html += '		<a href="javascript:;" class="btn btn-danger btn-sm del-btn" data-id="' + item.tecId + '">删除</a>';
+					html += '		<a href="javascript:;" class="btn btn-success btn-sm update-btn" data-id="' + item.tecId + '">详情</a>';
+					html += '	</td>';
+					html += '</tr>';
+
+					dataTable.append(html);				
+
+				});		
+
+				//设置分页信息
+				recordCount = data.pager.recordCount;
+				pageSize = data.pager.pageSize;
+				pageCount = data.pager.pageCount;
+				pageNum = data.pager.pageNum;
+
+				$('#pagerInfo').html('共' + recordCount + '条数据，' + pageNum + '/' + pageCount + '页');
+
+				//动态显示分页按钮
+				if (pageNum <= 1) {
+					$('#firstBtn').hide();
+					$('#prevBtn').hide();
+				} else {
+					$('#firstBtn').show();
+					$('#prevBtn').show();
+				}
+
+				if (pageNum >= pageCount) {
+					$('#nextBtn').hide();
+					$('#lastBtn').hide();
+				} else {
+					$('#nextBtn').show();
+					$('#lastBtn').show();
+				}
+
+				//动态生成页码按钮
+				$('#pagerNav .pageNumBtn').parent().remove();
+
+				var start = pageNum - 2;
+				var end = pageNum + 2;
+
+				if (pageNum <= 3) {
+					start = 1;
+					end = 5;
+				}
+
+				if (pageNum >= pageCount - 2) {
+					end = pageCount;
+				}
+
+				if (pageNum < 5) {
+					end = pageCount;
+				}
+
+				for (var i = start;i <= end;i ++) {
+					html = $('<li><a href="javascript:void(0);" class="pageNumBtn">' + i + '</a></li>');
+					
+					$('#nextBtn').parent().before(html);
+					
+					//当前页码高亮
+					if (i == pageNum) {
+						html.addClass('active');
+					}
+
+				}
+
+			})
+			.error(function(){
+				layer.msg('网络请求错误');
+			});
+
+		}
+
+		//页码按钮单击
+		$('#pagerNav').on('click','.pageNumBtn',function(e){
+			pageNum = $(this).text();
+			getData();
+		});
+
+
+		//首页按钮单击
+		$('#firstBtn').click(function() {
+			pageNum = 1;
+			getData();	
+		});
+
+		//上页按钮单击
+		$('#prevBtn').click(function() {
+			pageNum --;
+			getData();	
+		});
+
+		//下页按钮单击
+		$('#nextBtn').click(function() {
+			pageNum ++;
+			getData();	
+		});
+
+		//末页按钮单击
+		$('#lastBtn').click(function() {
+			pageNum = pageCount;
+			getData();	
+		});
+
+		//详情按钮单击
+		$('#dataTable').on('click','.update-btn',function(e) {
+			
+			//获得自定义属性
+			var tecId = $(this).attr('data-id');
+
+			layer.open({
+				title:'教师详情',
+			    type: 2, 				   
+			    area: ['620px', '600px'], //宽高
+			    content: 'UpdateTec.html?tecId=' + tecId
+			});
+
+		});
+
+		//删除按钮单击
+		$('#dataTable').on('click','.del-btn',function(e) {
+
+			var that = this;
+
+			// 确认框
+			layer.confirm('确定要删除此员工吗？', {
+			    btn: ['确定','取消'] //按钮
+			}, function(){	
+
+				layer.closeAll();
+				
+				//获得自定义属性
+				var tecId = $(that).attr('data-id');
+
+				//发出ajax请求，调用后端接口删除数据
+				$.post(baseUrl + '/DelTecServlet',{tecId:tecId},function(data) {
+
+					layer.msg('删除成功！');
+
+					$(that).parents('tr').remove();
+
+				});
+			    
+			}, function(){					
+			   
+			});					
+			
+
+		});
+
+	});		
+
+
+	</script>
+</body>
+</html>

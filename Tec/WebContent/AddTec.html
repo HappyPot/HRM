@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<!--设置浏览器的布局视口，只在移动端浏览器起作用-->
+	<meta name="viewport" content="width=width-device,initial-scale=1,user-scalable=no" />
+	<!--引入bootstrap的核心css-->
+	<link rel="stylesheet" href="js/bootstrap/css/bootstrap.css" />
+	<title>增加教师</title>
+	<!--判断如果是IE9以下，引入兼容h5标签的js文件，注意空格的位置-->		
+	<!--[if lt IE 9]>
+	
+	<script src="js/bootstrap/js/respond.min.js"></script>
+	<script src="js/bootstrap/js/html5shiv.min.js"></script>		
+	<![end if] -->
+</head>
+<body>	
+	<div class="container">
+		
+		<ol class="breadcrumb">
+			<li><a href="#">教师管理系统</a></li>
+			<li><a href="#">教师管理</a></li>			
+			<li>增加新教师</li>
+		</ol>
+
+		<h2 class="page-header">增加新教师</h2>
+		<form id="form1" class="form-horizontal">
+			<div class="form-group">
+				<label for="" class="col-sm-2">教师姓名</label>
+				<div class="col-sm-10">
+					<input type="text" id="tecName" name="tecName" placeholder="请输入教师姓名" class="form-control"/>
+				</div>					
+			</div>	
+			<div class="form-group">
+				<label for="" class="col-sm-2">初始密码</label>
+				<div class="col-sm-10">
+					<input type="password" id="tecPwd" name="tecPwd" placeholder="请输入初始密码" class="form-control"/>
+				</div>					
+			</div>
+			<div class="form-group">
+				<label for="" class="col-sm-2">确认密码</label>
+				<div class="col-sm-10">
+					<input type="password" id="tecPwd2" name="tecPwd2" placeholder="再次输入密码" class="form-control"/>
+				</div>					
+			</div>
+			<div class="form-group">
+				<label for="" class="col-sm-2">等级</label>
+				<div class="col-sm-10">
+					<select name="rankId" id="rankId" class="form-control">
+						<option value="">请选择等级</option>						
+					</select>
+				</div>					
+			</div>
+			<div class="form-group">
+				<label for="" class="col-sm-2">课程</label>
+				<div class="col-sm-10">
+					<select name="courseId" id="courseId" class="form-control">
+						<option value="">请选择课程</option>
+					</select>
+				</div>					
+			</div>
+			<div class="form-group">					
+				<div class="col-sm-10 col-sm-offset-2">
+					<input type="button"  value="增加教师" class="btn btn-success" id="addBtn"/>
+					<input type="button"  value="取消" class="btn btn-danger" onclick="history.back();"/>
+				</div>
+			</div>		
+		</form>
+	</div>
+	
+	<!--引入jquery-->
+	<script src="js/jquery.js"></script>
+	<!-- 引入全局公共js文件 -->
+	<script type="text/javascript" src="js/global.js"></script>
+	<!--引入bootstrap的js功能-->
+	<script src="js/bootstrap/js/bootstrap.js"></script>
+	<!-- 引入layer弹出层js功能 -->
+	<script type="text/javascript" src="js/layer/layer.js"></script>
+	<script type="text/javascript">
+		
+		$(document).ready(function() {
+
+			//动态生成等级列表和课程列表
+			$.getJSON(baseUrl + '/QueryCourseJsonServlet',function(data){
+				
+				var courseId = $('#courseId');
+
+				$.each(data,function(index,item) {
+					var opt = '<option value="' + item.courseId + '">' + item.courseName + '</option>';
+					courseId.append(opt);
+				});
+
+			})
+			.error(function(){
+				layer.msg('网络请求失败');
+			});
+
+			$.getJSON(baseUrl + '/QueryRankServlet',function(data){
+				
+				var rankId = $('#rankId');
+
+				$.each(data,function(index,item) {
+
+					var opt = '<option value="' + item.rankId + '">' + item.rankName + '</option>';
+					rankId.append(opt);
+
+				});
+
+			})
+			.error(function(){
+				layer.msg('网络请求失败');
+			});
+
+
+			//验证用户名是否存在
+			$('#tecName').blur(function(event) {
+
+				var tecName = $('#tecName');
+
+				if (tecName.val() == '' || tecName.val().length > 10) {
+					layer.msg('登录名不能为空且最多10字符');					
+					return;
+				}
+
+				layer.msg('正在检查用户名', {icon: 16});
+				
+				$.post(baseUrl + '/CheckNameServlet',{tecName:$('#tecName').val()},function(data) {
+
+					layer.closeAll();
+
+					if (data == 'true') {
+						layer.msg('此登录名已经存在，请使用其他登录名');						
+					} else {
+						layer.msg('此登录名可以使用');
+					}
+					
+				})
+				.error(function(){
+					layer.msg('网络请求失败');
+				});
+
+			});
+			/*表单验证函数*/
+			function checkForm() {
+
+				//员工姓名
+				var tecName = $('#tecName');
+
+				if (tecName.val() == '' || tecName.val().length > 10) {
+					layer.msg('员工姓名不能为空且不能超过10字符');
+					tecName.focus();
+					return false;
+				}
+
+				//密码
+				var tecPwd = $('#tecPwd');
+				var tecPwd2 = $('#tecPwd2');
+				
+				if (tecPwd.val() == '' || tecPwd.val().length < 6 || tecPwd.val().length > 12) {
+					layer.msg('密码必须6~12位');
+					tecPwd.focus();
+					return false;
+				}
+
+				if (tecPwd.val() != tecPwd2.val()) {
+					layer.msg('两次密码输入不一致！');
+					tecPwd2.focus();
+					return false;
+				}
+				//课程
+				var courseId = $('#courseId');
+
+				if (courseId.val() == '') {
+					layer.msg('请选择一个课程');
+					courseId.focus();
+					return false;
+				}
+				
+				//等级
+				var rankId = $('#rankId');
+
+				if (rankId.val() == '') {
+					layer.msg('请选择一个等级');
+					rankId.focus();
+					return false;
+				}
+				return true;
+			}
+
+			// 增加按钮单击事件
+			$('#addBtn').click(function() {
+
+				//验证表单
+				if ( !checkForm() )
+					return;
+				
+				//表单数据序列化
+				var params = $('#form1').serialize();
+
+				alert(params);
+
+				layer.msg('正在提交数据...', {icon: 16});
+
+				$.post(baseUrl + '/AddTecServlet',params,function(data) {
+
+					layer.closeAll();
+
+					layer.msg('增加新教师成功！');					
+				})
+				.error(function(){
+					layer.msg('网络请求失败');
+				});			
+
+			});
+
+		});		
+
+	</script>
+</body>
+</html>

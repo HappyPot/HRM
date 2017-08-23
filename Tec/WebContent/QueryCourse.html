@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<!--设置浏览器的布局视口，只在移动端浏览器起作用-->
+	<meta name="viewport" content="width=width-device,initial-scale=1,user-scalable=no" />
+	<!--引入bootstrap的核心css-->
+	<link rel="stylesheet" href="js/bootstrap/css/bootstrap.css" />
+	<title>查询课程数据</title>
+	<!--判断如果是IE9以下，引入兼容h5标签的js文件，注意空格的位置-->		
+	<!--[if lt IE 9]>
+	
+	<script src="js/bootstrap/js/respond.min.js"></script>
+	<script src="js/bootstrap/js/html5shiv.min.js"></script>		
+	<![end if] -->
+</head>
+<body>	
+	<div class="container">
+		
+		<ol class="breadcrumb">
+			<li><a href="#">教师管理系统</a></li>
+			<li><a href="#">课程管理</a></li>			
+			<li>查询课程数据</li>
+		</ol>
+
+		<h2 class="page-header">课程数据列表</h2>
+		
+		<table class="table table-bordered table-striped" id="dataTable">
+			<thead>
+				<tr>
+					<th>课程编号</th>
+					<th>课程名称</th>
+					<th>操作</th>
+				</tr>
+			</thead>
+			<tbody>
+				<!--<c:forEach items="${list}" var="dept">
+				<tr>
+					<td>${dept.deptId}</td>
+					<td>${dept.deptName}</td>
+					<td>${dept.deptLoc}</td>
+					<td>
+						<a href="GetDeptServlet?deptId=${dept.deptId}" class="btn btn-primary btn-sm">修改</a>
+						<a href="javascript:del(${dept.deptId});" class="btn btn-danger btn-sm delbtn">删除</a>						
+					</td>
+				</tr>
+				</c:forEach>-->
+
+			</tbody>
+		</table>
+
+		<div class="row">
+			<div class="col-sm-offset-8 col-sm-4">
+				<a href="AddCourse.html" class="btn btn-success btn-block">增加新课程</a>
+			</div>
+		</div>
+	</div>
+
+		<!--引入jquery-->
+	<script src="js/jquery.js"></script>
+	<!-- 引入全局公共js文件 -->
+	<script type="text/javascript" src="js/global.js"></script>
+	<!--引入bootstrap的js功能-->
+	<script src="js/bootstrap/js/bootstrap.js"></script>
+	<!-- 引入layer弹出层js功能 -->
+	<script type="text/javascript" src="js/layer/layer.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			// 加载层
+			layer.load(1);
+			// 发出ajax请求，得到等级json数据，动态生成表格
+			$.getJSON(baseUrl + "/QueryCourseJsonServlet",function(data){
+
+				layer.closeAll();
+
+				var htmlStr = '';
+
+				var dataTable = $('#dataTable tbody');
+				
+				// 遍历响应的json数组数据
+				$.each(data,function(index,el){
+					
+					htmlStr = '';
+					htmlStr += '<tr>';
+					htmlStr += '	<td>' + el.courseId + '</td>';
+					htmlStr += '	<td>' + el.courseName + '</td>';
+					htmlStr += '	<td>';
+					htmlStr += '		<input type="hidden" id="courseId" name="courseId" value="'+el.courseId+'">';
+					htmlStr += '		<a href="UpdateCourse.html?courseId=' + el.courseId + '" class="btn btn-primary btn-sm update-btn">修改</a>';
+					htmlStr += '		<a href="javascript:;" class="btn btn-danger btn-sm del-btn" data-id="' + el.courseId + '">删除</a>';
+					htmlStr += '	</td>';
+					htmlStr += '</tr>';
+
+					dataTable.append(htmlStr);
+				});
+
+			});
+			$("#dataTable").on("click",".del-btn",function(){
+				var courseId = $(this).attr("data-id");
+				alert(courseId);
+				del(courseId);
+			})
+			/*删除确认*/
+			function del(courseId) {
+				var flag = window.confirm("你确定要删除此课程吗");
+				
+				if (flag) {
+					location.href = 'DelCourseServlet?courseId=' + courseId;
+				}
+			}
+			// /*表单验证*/
+			// var courseName = $('#courseName');
+
+			// $('#form1').submit(function() {
+				
+			// 	if (courseName.val() == "" || courseName.val().length > 10)  {
+			// 		alert("课程名称不能为空且最多10字符");
+			// 		return false;
+			// 	}
+
+			// });
+
+		});		
+
+	</script>
+</body>
+</html>
